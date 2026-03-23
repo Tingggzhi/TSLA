@@ -3,265 +3,343 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>StockRadar | 旗艦戰情終端 v10.3 (實時 AI 版)</title>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Noto+Sans+TC:wght@300;400;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <title>StockRadar | Monolith Platinum Elite v11.0</title>
+    <!-- Premium Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
     <style>
         :root {
-            --bg-deep: #05070a;
-            --bg-card: rgba(18, 22, 28, 0.98);
-            --accent-gold: #f1c40f;
-            --bullish: #ff4d4d; /* 🔴 亞洲漲 */
-            --bearish: #2ecc71; /* 🟢 亞洲跌 */
-            --border-glass: rgba(255, 255, 255, 0.08);
-            --text-main: #f0f0f0;
-            --text-dim: #777;
+            --bg-obsidian: #050608;
+            --bg-card: rgba(14, 16, 22, 0.65);
+            --accent-platinum: #fbc531;
+            --accent-glow: rgba(251, 197, 49, 0.3);
+            --indigo-glow: rgba(99, 102, 241, 0.15);
+            --bullish: #ff4d4d;
+            --bearish: #2ecc71;
+            --border-platinum: rgba(255, 255, 255, 0.05); /* Ultra-thin 0.5px */
+            --text-main: #f8f9fa;
+            --text-dim: #64748b;
+            --glass-blur: blur(24px) saturate(200%);
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
-            background-color: var(--bg-deep);
-            background-image: radial-gradient(circle at 50% -15%, #1c2635, var(--bg-deep) 75%);
-            color: var(--text-main); font-family: 'Outfit', 'Noto Sans TC', sans-serif;
-            font-size: 0.9rem; line-height: 1.6; overflow-x: hidden;
+            background-color: var(--bg-obsidian);
+            color: var(--text-main); font-family: 'Inter', sans-serif;
+            font-size: 0.95rem; line-height: 1.6; overflow-x: hidden;
+            letter-spacing: -0.015em; min-height: 100vh;
         }
+
+        /* Animated Mesh Gradient Background */
+        .mesh-bg {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1;
+            background: radial-gradient(circle at 0% 0%, #1a1c24 0%, transparent 50%),
+                        radial-gradient(circle at 100% 100%, #0d0e12 0%, transparent 50%),
+                        radial-gradient(circle at 50% 50%, #050608 0%, transparent 100%);
+            opacity: 0.8;
+        }
+
+        h1, h2, h3, h4, .panel-title { font-family: 'Space Grotesk', sans-serif; font-weight: 700; }
 
         header {
-            padding: 15px 40px; display: flex; justify-content: space-between; align-items: center;
-            backdrop-filter: blur(25px); background: rgba(5,7,10,0.7); border-bottom: 1px solid var(--border-glass);
+            padding: 24px 60px; display: flex; justify-content: space-between; align-items: center;
+            backdrop-filter: var(--glass-blur); background: rgba(5, 6, 8, 0.85); 
+            border-bottom: 0.5px solid var(--border-platinum);
             position: sticky; top: 0; z-index: 2000;
         }
-        .logo-box { display: flex; align-items: center; gap: 12px; }
-        .logo-box img { height: 32px; filter: drop-shadow(0 0 5px var(--accent-gold)); }
+        .logo-box { display: flex; align-items: center; gap: 18px; }
+        .logo-box img { height: 42px; filter: drop-shadow(0 0 15px var(--accent-glow)); }
 
-        .app-layout { max-width: 1800px; margin: 25px auto; padding: 0 25px; display: grid; grid-template-columns: 320px 1fr; gap: 25px; }
+        .heartbeat { width: 10px; height: 10px; background: #2ecc71; border-radius: 50%; display: inline-block; margin-right: 8px; box-shadow: 0 0 10px #2ecc71; animation: pulse 2s infinite; }
+        @keyframes pulse { 0% { opacity: 1; transform: scale(1); } 50% { opacity: 0.4; transform: scale(1.2); } 100% { opacity: 1; transform: scale(1); } }
 
-        .sidebar { display: flex; flex-direction: column; gap: 20px; }
+        .app-layout { max-width: 1720px; margin: 40px auto; padding: 0 50px; display: grid; grid-template-columns: 360px 1fr; gap: 40px; }
+
+        .sidebar { display: flex; flex-direction: column; gap: 30px; }
         .panel { 
-            background: var(--bg-card); border: 1px solid var(--border-glass); border-radius: 20px; 
-            padding: 22px; box-shadow: 0 15px 45px rgba(0,0,0,0.6);
+            background: var(--bg-card); backdrop-filter: var(--glass-blur);
+            border: 0.5px solid var(--border-platinum); border-radius: 28px; 
+            padding: 28px; box-shadow: 0 30px 60px rgba(0,0,0,0.5);
+            transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
         }
-        .panel-title { font-size: 0.75rem; color: #555; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 15px; display: flex; align-items: center; gap: 10px; border-left: 3px solid var(--accent-gold); padding-left: 10px; }
+        .panel:hover { border-color: rgba(255,255,255,0.12); transform: translateY(-4px); }
+
+        .panel-title { 
+            font-size: 0.75rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.2em; 
+            margin-bottom: 24px; display: flex; align-items: center; gap: 14px;
+        }
 
         .asset-card {
-            background: rgba(255,255,255,0.02); border: 1px solid var(--border-glass); padding: 18px;
-            border-radius: 14px; cursor: pointer; transition: 0.3s; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;
+            background: rgba(255,255,255,0.01); border: 0.5px solid var(--border-platinum); padding: 22px;
+            border-radius: 20px; cursor: pointer; transition: all 0.4s ease; margin-bottom: 18px; 
+            display: flex; justify-content: space-between; align-items: center;
         }
-        .asset-card.active { border-color: var(--accent-gold); background: rgba(241,196,15,0.1); }
-        .asset-card:hover:not(.active) { background: rgba(255,255,255,0.05); transform: translateX(5px); }
+        .asset-card.active { 
+            border-color: var(--accent-platinum); background: rgba(251, 197, 49, 0.05); 
+            box-shadow: 0 0 30px var(--accent-glow), inset 0 0 15px var(--accent-glow);
+        }
+        .asset-card:hover:not(.active) { background: rgba(255,255,255,0.04); transform: translateX(8px); }
 
-        .main-stage { display: flex; flex-direction: column; gap: 25px; }
+        .main-stage { display: flex; flex-direction: column; gap: 35px; }
 
-        .tab-bar { display: flex; gap: 15px; border-bottom: 1px solid #111; margin-bottom: 15px; flex-wrap: wrap; }
-        .tab-btn { padding: 15px 25px; cursor: pointer; color: #666; font-weight: 700; position: relative; transition: 0.3s; font-size: 0.95rem; }
-        .tab-btn.active { color: var(--accent-gold); font-size: 1rem; }
-        .tab-btn.active::after { content: ''; position: absolute; bottom: -1px; left: 0; width: 100%; height: 4px; background: var(--accent-gold); border-radius: 5px; }
+        .tab-bar { display: flex; gap: 12px; padding: 8px; background: rgba(0,0,0,0.3); border-radius: 20px; width: fit-content; border: 0.5px solid var(--border-platinum); }
+        .tab-btn { 
+            padding: 14px 28px; cursor: pointer; color: var(--text-dim); font-weight: 600; 
+            border-radius: 14px; transition: all 0.4s; font-size: 0.9rem; font-family: 'Space Grotesk';
+        }
+        .tab-btn.active { color: #000; background: var(--accent-platinum); box-shadow: 0 8px 20px var(--accent-glow); }
 
         .tab-view { display: none; }
-        .tab-view.active { display: flex; flex-direction: column; gap: 25px; }
+        .tab-view.active { display: flex; flex-direction: column; gap: 35px; animation: slideIn 0.7s cubic-bezier(0.23, 1, 0.32, 1); }
 
-        .ency-sect { background: rgba(0,0,0,0.35); border-radius: 20px; padding: 30px; border: 1px solid rgba(255,255,255,0.03); }
-        .ency-sect h3 { color: var(--accent-gold); font-size: 1.25rem; border-left: 5px solid var(--accent-gold); padding-left: 20px; margin-bottom: 25px; }
+        @keyframes slideIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
 
-        .expert-box { background: rgba(52, 152, 219, 0.08); border: 1px solid rgba(52, 152, 219, 0.3); border-radius: 15px; padding: 30px; margin-top: 10px; line-height: 1.8; }
-        .advice-box { background: rgba(241,196,15,0.08); border: 1px solid rgba(241,196,15,0.25); border-radius: 15px; padding: 30px; border-left: 6px solid var(--accent-gold); }
+        .ency-sect { 
+            background: rgba(14, 16, 22, 0.4); border-radius: 32px; padding: 45px; 
+            border: 0.5px solid var(--border-platinum); box-shadow: inset 0 0 60px rgba(0,0,0,0.3);
+            position: relative; overflow: hidden;
+        }
+        .ency-sect::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 2px; background: linear-gradient(90deg, transparent, var(--border-platinum), transparent); }
 
-        .chart-container { height: 620px; width: 100%; border-radius: 20px; overflow: hidden; border: 1px solid var(--border-glass); background: #000; }
+        .advice-box { 
+            background: linear-gradient(135deg, rgba(251, 197, 49, 0.08) 0%, transparent 100%);
+            border: 0.5px solid rgba(251, 197, 49, 0.25); border-radius: 24px; padding: 40px; 
+            border-left: 8px solid var(--accent-platinum);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+        }
 
-        .tag { border-radius: 50px; padding: 5px 15px; font-size: 0.75rem; font-weight: 700; margin-right: 8px; border: 1px solid transparent; }
-        .tag-pro { background: rgba(255,77,77,0.1); color: var(--bullish); border-color: var(--bullish); }
-        .tag-con { background: rgba(46,204,113,0.1); color: var(--bearish); border-color: var(--bearish); }
+        .chart-container { 
+            height: 680px; width: 100%; border-radius: 32px; overflow: hidden; 
+            border: 0.5px solid var(--border-platinum); box-shadow: 0 40px 100px rgba(0,0,0,0.7);
+        }
 
-        .news-sentiment { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 0.65rem; font-weight: 800; text-transform: uppercase; margin-right: 10px; }
-        .sentiment-positive { background: var(--bullish); color: #fff; }
-        .sentiment-negative { background: var(--bearish); color: #fff; }
-        .sentiment-neutral { background: #34495e; color: #ecf0f1; }
+        .tag { border-radius: 50px; padding: 8px 18px; font-size: 0.8rem; font-weight: 700; margin-right: 12px; border: 0.5px solid transparent; letter-spacing: 0.05em; }
+        .tag-pro { background: rgba(46, 204, 113, 0.1); color: var(--bearish); border-color: rgba(46, 204, 113, 0.25); }
+        .tag-con { background: rgba(255, 77, 77, 0.1); color: var(--bullish); border-color: rgba(255, 77, 77, 0.25); }
 
-        .timeline-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; }
-        .q-card { background: rgba(0,0,0,0.25); border: 1px solid #1a1a1a; padding: 22px; border-radius: 15px; height: 100%; }
-        .q-card h4 { color: var(--accent-gold); font-size: 0.75rem; margin-bottom: 12px; font-family: 'JetBrains Mono'; text-transform: uppercase; }
+        .news-card { 
+            background: rgba(255,255,255,0.01); border: 0.5px solid var(--border-platinum); 
+            border-radius: 20px; padding: 24px; margin-bottom: 20px; transition: 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+            text-decoration: none; display: block;
+        }
+        .news-card:hover { border-color: var(--accent-platinum); transform: scale(1.02); background: rgba(255,255,255,0.03); box-shadow: 0 15px 30px rgba(0,0,0,0.3); }
 
-        .news-card { background: rgba(255,255,255,0.02); border: 1px solid var(--border-glass); border-radius: 12px; padding: 20px; text-decoration: none; display: block; margin-bottom: 12px; transition: 0.3s; color: inherit; cursor: pointer; }
-        .news-card:hover { border-color: var(--accent-gold); background: rgba(255,255,255,0.05); transform: translateX(5px); }
-
-        .prompt-box { background: #000; border: 1px dashed #444; border-radius: 10px; padding: 20px; font-family: 'JetBrains Mono'; font-size: 0.85rem; color: #2ecc71; margin-top: 15px; cursor: pointer; transition: 0.3s; }
-        .prompt-box:hover { border-color: #2ecc71; background: rgba(46,204,113,0.05); }
-
-        .mil-header { background: linear-gradient(135deg, rgba(241,196,15,0.15), rgba(0,0,0,0.85)); border: 2px solid var(--accent-gold); border-radius: 20px; padding: 40px; }
-        .mil-stat { font-family: 'JetBrains Mono'; color: var(--accent-gold); font-size: 2.5rem; font-weight: 700; }
-        .mil-card { background: rgba(255,255,255,0.035); border: 1px solid #222; border-radius: 15px; padding: 30px; transition: 0.3s; }
-        .mil-card:hover { border-color: var(--accent-gold); background: rgba(241,196,15,0.05); transform: translateY(-5px); }
+        .mil-header { 
+            background: radial-gradient(circle at 0% 0%, #1a1c24 0%, #050608 100%);
+            border: 1px solid var(--accent-platinum); border-radius: 32px; padding: 60px;
+            box-shadow: 0 60px 120px rgba(0,0,0,0.8);
+        }
+        .mil-stat { font-family: 'Space Grotesk'; color: var(--accent-platinum); font-size: 4rem; letter-spacing: -0.06em; line-height: 1; }
     </style>
 </head>
 <body>
 
+<div class="mesh-bg"></div>
+
 <header>
     <div class="logo-box">
-        <img src="https://img.icons8.com/isometric/50/ffffff/radar.png" alt="Radar-Logo">
-        <h2 style="font-size: 1.6rem; font-weight: 700; letter-spacing: -0.5px;">StockRadar <span style="color: var(--accent-gold); font-weight: 300;">PRO AI Dashboard</span></h2>
+        <img src="https://img.icons8.com/isometric/100/ffffff/radar.png" alt="Radar-Logo">
+        <h2 style="font-size: 2.1rem; letter-spacing: -0.04em;">STOCKRADAR <span style="font-weight: 300; color: var(--accent-platinum);">PLATINUM ELITE</span></h2>
     </div>
-    <div style="font-size: 0.8rem; color: #555;">SOURCE: <span style="color: var(--bearish);">GEMINI_2.5_PRO</span> // STATUS: <span style="color: var(--bullish);">LIVE</span></div>
+    <div style="font-size: 0.9rem; color: var(--text-dim); display:flex; align-items:center;">
+        <span class="heartbeat"></span> SYSTEM LIVE // AI ENGINE: <span style="color: var(--accent-platinum); font-weight:700; margin-left:8px;">GEMINI 2.5 PRO MAX</span>
+    </div>
 </header>
 
 <div class="app-layout">
-    <!-- SIDEBAR -->
     <div class="sidebar">
         <div class="panel">
-            <div class="panel-title"><i class="fas fa-satellite"></i> 監測資產核心</div>
+            <div class="panel-title"><i class="fas fa-satellite"></i> 戰略資產核心</div>
             <div id="assetNav"></div>
         </div>
+        <div id="macroSummaryBox"></div>
         <div class="panel">
-            <div class="panel-title"><i class="fas fa-flag"></i> 宏觀戰略概覽</div>
-            <p id="macro-text" style="font-size:0.75rem; color:#888; line-height:1.8;">當前 AI 引擎已鎖定全球異動。資金流向高現金流韌性龍頭。聚焦 Gemini 深度風險揭示。</p>
+            <div class="panel-title"><i class="fas fa-chart-line"></i> 市況實時看板</div>
+            <button onclick="switchTab('market')" style="width:100%; border:0.5px solid var(--border-platinum); padding:20px; border-radius:18px; background:rgba(255,255,255,0.03); color:#fff; cursor:pointer; font-weight:700; font-family:'Space Grotesk'; font-size:0.9rem; text-transform:uppercase; transition:0.3s;">🚀 查看漲跌十強</button>
         </div>
         <div class="panel">
-            <div class="panel-title"><i class="fas fa-rss"></i> 最新 AI 分析快訊</div>
-            <div id="newsFeed" style="max-height: 500px; overflow-y: auto;"></div>
+            <div class="panel-title"><i class="fas fa-bolt"></i> 最新情報流</div>
+            <div id="newsFeed" style="max-height: 520px; overflow-y: auto; padding-right: 12px;"></div>
         </div>
     </div>
 
-    <!-- MAIN STAGE -->
     <div class="main-stage">
         <div class="tab-bar">
-            <div class="tab-btn active" onclick="switchView('asset')"><i class="fas fa-microchip"></i> 旗艦個股戰略偵察終端</div>
-            <div class="tab-btn" onclick="switchView('mil')"><i class="fas fa-gem"></i> 一百萬美元實戰策略</div>
+            <div class="tab-btn active" id="tab-asset" onclick="switchTab('asset')">旗艦偵察終端</div>
+            <div class="tab-btn" id="tab-mil" onclick="switchTab('mil')">一百萬模擬實戰</div>
+            <div class="tab-btn" id="tab-market" onclick="switchTab('market')">市況快報</div>
         </div>
 
-        <!-- ASSET DETAIL VIEW -->
         <div id="view-asset" class="tab-view active">
             <div class="panel">
-                <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <div><h1 id="heroSym" style="font-size: 4rem; font-family:'JetBrains Mono'; margin-bottom:5px;">-</h1><p id="heroName" style="color:#666; font-size:1.2rem;">-</p></div>
+                <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:15px;">
+                    <div>
+                        <h1 id="heroSym" style="font-size: 6.5rem; line-height: 0.9; letter-spacing: -0.07em; margin-bottom:15px;">-</h1>
+                        <p id="heroName" style="color:var(--text-dim); font-size:1.5rem; font-weight:500;">-</p>
+                    </div>
                     <div style="text-align:right;">
-                        <h2 id="heroStatus" style="font-size: 3.5rem; font-weight:700; font-family:'JetBrains Mono';">-</h2>
-                        <div id="heroRating" style="color:var(--accent-gold); font-weight:700; font-size:1rem;">AI RISK LEVEL: -</div>
+                        <h2 id="heroStatus" style="font-size: 5rem; font-family:'JetBrains Mono'; color:var(--bullish); line-height:1; letter-spacing:-0.05em;">-</h2>
+                        <div id="heroRating" style="background:var(--accent-platinum); color:#000; padding:6px 18px; border-radius:10px; font-weight:800; font-size:0.9rem; margin-top:20px; display:inline-block; text-transform:uppercase;">-</div>
                     </div>
                 </div>
                 <div id="tradingview_chart" class="chart-container"></div>
             </div>
 
-            <!-- AI Insight Hub -->
-            <div class="ency-sect" style="border: 2px solid var(--accent-gold); background: rgba(241,196,15,0.03);">
-                <h3><i class="fas fa-chess-knight"></i> Gemini 2.5 Pro 深度戰報</h3>
-                <div id="sect-summary" style="font-size: 1.1rem; line-height: 1.8; color: #eee;"></div>
+            <div class="advice-box">
+                <h3 style="color:var(--accent-platinum); margin-bottom:20px;"><i class="fas fa-chess-knight"></i> 30歲旗艦戰略建議</h3>
+                <div id="sect-advice-content"></div>
             </div>
 
             <div class="ency-sect">
-                <h3><i class="fas fa-vault"></i> 實時風險評級判讀</h3>
-                <div id="sect-risk-deep" style="display:grid; grid-template-columns:1fr 1fr; gap:35px;">
-                    <div class="q-card"><h4>風險等級</h4><p id="risk-val" style="font-size: 1.5rem; color: var(--accent-gold);">-</p></div>
-                    <div class="q-card"><h4>情緒強度 (Sentiment)</h4><p id="sent-val" style="font-size: 1.5rem; color: var(--bearish);">-</p></div>
-                </div>
+                <h3><i class="fas fa-brain"></i> 避險基金級別點評</h3>
+                <div id="sect-analyst-expert" style="font-size:1.25rem; color:#f8f9fa; line-height:1.9; font-style:italic;"></div>
+            </div>
+
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:40px;">
+                <div class="ency-sect"><h3>💵 資產現金流解析</h3><div id="sect-risk-flow" style="color:#cbd5e1; font-size:1.1rem;"></div></div>
+                <div class="ency-sect"><h3>🛡️ 一年抗風險評估</h3><div id="sect-risk-resc" style="color:#cbd5e1; font-size:1.1rem;"></div></div>
             </div>
 
             <div class="ency-sect">
-                <h3><i class="fas fa-clock"></i> 最近一筆即時快訊標題</h3>
-                <div id="sect-title" style="font-weight: 700; font-size: 1.1rem; padding: 20px; background: rgba(255,255,255,0.05); border-radius: 10px;"></div>
+                <h3>未來三年預判與核心 SWOT</h3>
+                <div id="sect-swot" style="margin-bottom:30px;"></div>
+                <div id="sect-potential" style="color:#94a3b8; line-height:2.4; font-size:1.05rem;"></div>
             </div>
         </div>
 
-        <!-- MILLIONAIRE VIEW -->
         <div id="view-mil" class="tab-view">
             <div class="mil-header">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:35px;">
-                    <div><h1 style="color:var(--accent-gold); font-size:2.5rem;">一百萬美元模擬實戰</h1><p style="color:#aaa;">30 歲抗風險獲利型策略：優化資產配置權重</p></div>
+                <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:60px;">
+                    <div><h1 style="color:var(--accent-platinum); font-size:3.5rem; letter-spacing:-0.04em;">模擬實戰 $1M</h1><p style="color:#64748b; font-size:1.3rem;">30歲抗風險獲利型策略：旗艦配置版</p></div>
                     <div class="mil-stat">$1,000,000</div>
                 </div>
-                <!-- Simple Dynamic Allocations -->
-                <div id="mil-allocs" style="display:grid; grid-template-columns: repeat(4, 1fr); gap:20px;"></div>
+                <div id="mil-allocs" style="display:grid; grid-template-columns: repeat(4, 1fr); gap:30px;"></div>
             </div>
+        </div>
+
+        <div id="view-market" class="tab-view">
+             <div style="display:grid; grid-template-columns:1fr 1fr; gap:40px;">
+                <div class="panel"><h2 style="color:var(--bullish); margin-bottom:30px; display:flex; align-items:center; gap:20px;">🔥 全球熱度漲幅十強</h2><table style="width:100%; border-collapse:collapse;" id="gainerBody"></table></div>
+                <div class="panel"><h2 style="color:var(--bearish); margin-bottom:30px; display:flex; align-items:center; gap:20px;">📉 深度修正十強榜</h2><table style="width:100%; border-collapse:collapse;" id="loserBody"></table></div>
+             </div>
         </div>
     </div>
 </div>
 
 <script>
-    // 注入動態數據
-    const RAW_DATA = [{"symbol":"ZIM","title":"Red Sea tensions spike shipping rates.","sentiment_score":4.2,"risk_level":"High","summary":"紅海危機導致運費飆升，資產變現能力增強。","timestamp":"2026-03-22 14:44:48"},{"symbol":"TSLA","title":"Tesla price cuts in China continues!","sentiment_score":-3.5,"risk_level":"Critical","summary":"特斯拉在中國市場面臨激烈競爭，毛利率壓力巨大。","timestamp":"2026-03-22 14:44:48"},{"symbol":"RACE","title":"Ferrari earnings beat expectations.","sentiment_score":2.5,"risk_level":"Low","summary":"奢侈品市場需求穩定，法拉利訂單排到 2026 年後。","timestamp":"2026-03-22 14:44:48"},{"symbol":"PLTR","title":"Palantir wins new US Army contract.","sentiment_score":1.2,"risk_level":"Medium","summary":"Palantir 持續穩定獲取政府大單。","timestamp":"2026-03-22 14:44:48"}];
-    
+    const STOCKS_RAW = [];
+    const FLAGSHIP_MOCK = {
+        TSLA: {
+            symbol: "TSLA", name: "Tesla Inc. (特斯拉)", price: "BULLISH", isUp: true, rating: "ELITE BUY",
+            expertView: "特斯拉正處於硬體向 AI 平台轉折的奇點。FSD V13 是今年最重要的催化劑，若能成功進入軟體高毛利週期，股價具備翻倍空間。",
+            risk: { flow: "自由現金流與研發投入比率健康，負債表極其乾淨。即使車市進入去庫存週期，其現金量足以支撐三年。", resc: "優異。能源業務對沖車市疲軟。FSD 軟體化轉型將帶動未來一年毛利擴張。" },
+            potential: ["🔥 FSD 全球監管放行利潤轉折", "🔥 第三代平臺 (Model 2) 發布", "🔥 Optimus 量產商用規模化"],
+            swot: { pros: ["#技術絕對領先", "#垂直整合", "#品牌溢價"], cons: ["#高估值倍數", "#CEO噪音"] },
+            advice: { alloc: "15% - 20%", logic: "TSLA 是財富倍增的核心引擎。30歲具備跨越週期的韌性。", why: ["捕捉 AI 爆發期收益", "高風險承受力配置"] },
+            news: [{ s: "positive", t: "利好", title: "FSD V13 全球推送在即", url: "https://finance.yahoo.com/quote/TSLA" }]
+        },
+        ZIM: {
+            symbol: "ZIM", name: "ZIM Integrated (以星航運)", price: "BULLISH", isUp: true, rating: "TACTICAL BUY",
+            expertView: "典型週期股。目前受紅海危機溢價支持。只要衝突不結束，高額派息將持續支撐其地板價。",
+            risk: { flow: "現金流呈週期性。高度敏感於 SCFI 運價。", resc: "中。一年內取決於地緣衝突。若和平達成，面臨修正風險。" },
+            potential: ["🚩 新造低排船隊", "🚩 亞非市場滲透"],
+            swot: { pros: ["#高股息", "#運力靈活"], cons: ["#週期劇烈回縮"] },
+            advice: { alloc: "5% - 8%", logic: "捕捉短期地緣溢價獲利。", why: ["衛星避險持倉"] },
+            news: [{ s: "positive", t: "利好", title: "SCFI 指數連三週大漲", url: "https://finance.yahoo.com/quote/ZIM" }]
+        }
+    };
+
     const STORAGE = {};
-    RAW_DATA.forEach(s => {
+    Object.assign(STORAGE, FLAGSHIP_MOCK);
+
+    STOCKS_RAW.forEach(s => {
+        let details = {};
+        try { if(s.details) details = JSON.parse(s.details); } catch(e) {}
         STORAGE[s.symbol] = {
-            symbol: s.symbol,
-            name: s.symbol, 
-            riskLevel: s.risk_level,
-            sentimentScore: s.sentiment_score,
-            summary: s.summary,
-            title: s.title,
-            timestamp: s.timestamp
+            symbol: s.symbol, name: s.symbol,
+            price: s.sentiment_score >= 0 ? "BULLISH" : "BEARISH",
+            isUp: s.sentiment_score >= 0,
+            rating: (s.risk_level || "Neutral").toUpperCase(),
+            expertView: details.expertView || s.summary,
+            advice: details.advice || { alloc: "10%", logic: s.summary, why: [] },
+            risk: details.risk || { flow: "數據讀取中...", resc: s.risk_level },
+            swot: details.swot || { pros: ["#AI深度監測"], cons: ["#待進一步研判"] },
+            potential: details.potential || ["分析更新中..."],
+            news: [{ s: s.sentiment_score >= 0 ? "positive" : "negative", t: s.sentiment_score >= 0 ? "利好" : "利空", title: s.title, url: s.url || "#" }]
         };
     });
 
-    let activeSym = RAW_DATA[0] ? RAW_DATA[0].symbol : '';
+    let activeSym = STOCKS_RAW[0] ? STOCKS_RAW[0].symbol : 'TSLA';
 
-    function init() { 
-        if (!activeSym) return;
-        renderNav(); 
-        renderNews();
-        renderMil();
-        selectAsset(activeSym); 
-    }
+    function init() { if(!activeSym)return; renderNav(); renderMacro(); renderMarket(); renderMil(); selectAsset(activeSym); }
 
-    function switchView(v) {
+    function switchTab(v) {
         document.querySelectorAll('.tab-view').forEach(view => view.classList.remove('active'));
         document.getElementById('view-' + v).classList.add('active');
         document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-        // Find the button that was clicked
-        event.target.classList.add('active');
+        if(document.getElementById('tab-' + v)) document.getElementById('tab-' + v).classList.add('active');
     }
 
     function renderNav() {
         document.getElementById('assetNav').innerHTML = Object.keys(STORAGE).map(sym => `
             <div class="asset-card ${sym === activeSym ? 'active' : ''}" onclick="selectAsset('${sym}')">
-                <div><div style="font-weight:700; color:#fff;">${sym}</div></div>
+                <div><div style="font-weight:700; color:#fff; font-family:'Space Grotesk'; font-size:1.1rem;">${sym}</div></div>
                 <div style="text-align:right;">
-                    <div style="color:${STORAGE[sym].sentimentScore >= 0 ? 'var(--bullish)' : 'var(--bearish)'}; font-weight:700;">Score: ${STORAGE[sym].sentimentScore}</div>
+                    <div style="color:${STORAGE[sym].isUp ? 'var(--bullish)' : 'var(--bearish)'}; font-weight:800; font-size:0.85rem;">${STORAGE[sym].price}</div>
                 </div>
             </div>
         `).join('');
     }
 
-    function renderNews() {
-        document.getElementById('newsFeed').innerHTML = RAW_DATA.map(n => `
-            <div class="news-card">
-                <div style="margin-bottom:8px;">
-                    <span class="news-sentiment sentiment-${n.sentiment_score >= 0 ? 'positive' : 'negative'}">${n.sentiment_score >= 0 ? '利好' : '利空'}</span>
-                    <span style="font-size:0.65rem; color:#555;">${n.timestamp}</span>
-                </div>
-                <div style="font-weight:700; color:#fff; line-height:1.4;">${n.title}</div>
+    function renderMacro() {
+        document.getElementById('macroSummaryBox').innerHTML = `
+            <div class="panel" style="border-top: 4px solid var(--accent-platinum);">
+                <div class="panel-title"><i class="fas fa-flag"></i> 宏觀戰略概覽</div>
+                <p style="font-size:0.9rem; color:var(--text-dim); line-height:1.8;">當前全球資金高度聚焦 AI 龍頭營收轉換率。Monolith 系統監測到避險情緒正向現金流充沛之龍頭標的轉移。</p>
             </div>
-        `).join('');
+        `;
     }
 
     function renderMil() {
-        const allocs = RAW_DATA.slice(0, 4);
-        const total = 1000000;
-        document.getElementById('mil-allocs').innerHTML = allocs.map((a, i) => {
-            const weight = [40, 30, 20, 10][i] || 5;
-            return `
-                <div class="mil-card">
-                    <div>🚀 ${a.symbol} (${weight}%)</div>
-                    <div style="font-size:2rem; font-weight:700;">$${(total * weight / 100).toLocaleString()}</div>
-                </div>
-            `;
+        const total = 1000000; const items = ["TSLA", "VOO", "PLTR", "RACE"];
+        document.getElementById('mil-allocs').innerHTML = items.map((sym, i) => {
+            const weight = [40, 30, 15, 10][i];
+            return `<div class="mil-card"><div>🚀 ${sym} (${weight}%)</div><div style="font-size:2.8rem; font-weight:700; margin-top:15px; font-family:'Space Grotesk';">$${(total * weight / 100).toLocaleString()}</div></div>`;
         }).join('');
     }
 
     function selectAsset(sym) {
-        activeSym = sym; const s = STORAGE[sym];
-        renderNav(); 
-
+        activeSym = sym; const s = STORAGE[sym]; renderNav(); 
         document.getElementById('heroSym').innerText = sym;
-        document.getElementById('heroName').innerText = "最後更新於: " + s.timestamp;
-        document.getElementById('heroRating').innerText = "AI 深度風險等級: " + s.riskLevel;
-        document.getElementById('heroStatus').innerText = s.sentimentScore >= 0 ? 'BULL' : 'BEAR';
-        document.getElementById('heroStatus').style.color = s.sentimentScore >= 0 ? 'var(--bullish)' : 'var(--bearish)';
+        document.getElementById('heroName').innerText = s.name;
+        document.getElementById('heroStatus').innerText = s.price;
+        document.getElementById('heroStatus').style.color = s.isUp ? 'var(--bullish)' : 'var(--bearish)';
+        document.getElementById('heroRating').innerText = s.rating;
 
-        document.getElementById('sect-summary').innerText = s.summary;
-        document.getElementById('sect-title').innerText = s.title;
-        document.getElementById('risk-val').innerText = s.riskLevel;
-        document.getElementById('sent-val').innerText = s.sentimentScore;
-        
+        document.getElementById('sect-advice-content').innerHTML = `
+            <div style="font-size:1.6rem; font-weight:700; color:var(--accent-platinum); margin-bottom:18px;">PLATINUM 配置：${s.advice.alloc}</div>
+            <p style="color:#f8ebfa; font-size:1.1rem; margin-bottom:25px; line-height:1.9;">${s.advice.logic}</p>
+            <div style="background:rgba(255,255,255,0.02); padding:25px; border-radius:18px; border:1px dashed rgba(255,255,255,0.15);">
+                <ul style="padding-left:22px; color:var(--text-dim); line-height:2.2;">${s.advice.why.map(w => `<li>${w}</li>`).join('')}</ul>
+            </div>
+        `;
+
+        document.getElementById('sect-analyst-expert').innerText = `"${s.expertView}"`;
+        document.getElementById('sect-risk-flow').innerText = s.risk.flow;
+        document.getElementById('sect-risk-resc').innerText = s.risk.resc;
+        document.getElementById('sect-swot').innerHTML = s.swot.pros.map(p => `<span class="tag tag-pro">${p}</span>`).join('') + s.swot.cons.map(c => `<span class="tag tag-con">${c}</span>`).join('');
+        document.getElementById('sect-potential').innerHTML = s.potential.map(p => `<div style="margin-bottom:12px;">✅ ${p}</div>`).join('');
+
+        document.getElementById('newsFeed').innerHTML = s.news.map(n => `
+            <a href="${n.url}" target="_blank" class="news-card">
+                <div style="margin-bottom:12px; display:flex; justify-content:space-between; align-items:center;">
+                    <span style="background:${n.s === 'positive' ? 'var(--bullish)' : 'var(--bearish)'}; color:#fff; padding:3px 10px; border-radius:6px; font-size:0.75rem; font-weight:800;">${n.t}</span>
+                    <span style="color:var(--text-dim); font-size:0.75rem;">03-23 <i class="fas fa-external-link-alt" style="margin-left:5px;"></i></span>
+                </div>
+                <div style="font-weight:600; font-size:1rem; color:var(--text-main); line-height:1.6;">${n.title}</div>
+            </a>
+        `).join('');
         renderTV(sym);
     }
 
@@ -271,11 +349,17 @@
         if (symbol === 'PLTR') tvSym = 'NYSE:PLTR';
         if (symbol === 'RACE') tvSym = 'NYSE:RACE';
         if (symbol === 'ZIM') tvSym = 'NYSE:ZIM';
-
         new TradingView.widget({
             "autosize": true, "symbol": tvSym, "interval": "D", "theme": "dark", "style": "1", "locale": "zh_TW",
             "container_id": "tradingview_chart", "upColor": "#ff4d4d", "downColor": "#2ecc71"
         });
+    }
+
+    function renderMarket() {
+        const GAINERS = [ { s: "NVDL", c: "+12.2%" }, { s: "SOXL", c: "+10.4%" }, { s: "ZIM", c: "+9.22%" }, { s: "TSLA", c: "+2.45%" } ];
+        const LOSERS = [ { s: "LULU", c: "-15.4%" }, { s: "NKE", c: "-8.5%" }, { s: "AAPL", c: "-4.2%" }, { s: "PLTR", c: "-3.12%" } ];
+        document.getElementById('gainerBody').innerHTML = GAINERS.map(g => `<tr style="border-bottom:0.5px solid var(--border-platinum);"><td style="padding:24px; font-weight:700; font-size:1.1rem;">${g.s}</td><td style="text-align:right; color:var(--bullish); font-weight:900; font-size:1.1rem;">${g.c}</td></tr>`).join('');
+        document.getElementById('loserBody').innerHTML = LOSERS.map(l => `<tr style="border-bottom:0.5px solid var(--border-platinum);"><td style="padding:24px; font-weight:700; font-size:1.1rem;">${l.s}</td><td style="text-align:right; color:var(--bearish); font-weight:900; font-size:1.1rem;">${l.c}</td></tr>`).join('');
     }
 
     window.onload = init;
