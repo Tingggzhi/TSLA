@@ -73,11 +73,25 @@
         .tag-pro { background: rgba(255,77,77,0.1); color: var(--bullish); border-color: var(--bullish); }
         .tag-con { background: rgba(46,204,113,0.1); color: var(--bearish); border-color: var(--bearish); }
 
+        .news-sentiment { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 0.65rem; font-weight: 800; text-transform: uppercase; margin-right: 10px; }
+        .sentiment-positive { background: var(--bullish); color: #fff; }
+        .sentiment-negative { background: var(--bearish); color: #fff; }
+        .sentiment-neutral { background: #34495e; color: #ecf0f1; }
+
+        .timeline-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; }
         .q-card { background: rgba(0,0,0,0.25); border: 1px solid #1a1a1a; padding: 22px; border-radius: 15px; height: 100%; }
         .q-card h4 { color: var(--accent-gold); font-size: 0.75rem; margin-bottom: 12px; font-family: 'JetBrains Mono'; text-transform: uppercase; }
 
+        .news-card { background: rgba(255,255,255,0.02); border: 1px solid var(--border-glass); border-radius: 12px; padding: 20px; text-decoration: none; display: block; margin-bottom: 12px; transition: 0.3s; color: inherit; cursor: pointer; }
+        .news-card:hover { border-color: var(--accent-gold); background: rgba(255,255,255,0.05); transform: translateX(5px); }
+
         .prompt-box { background: #000; border: 1px dashed #444; border-radius: 10px; padding: 20px; font-family: 'JetBrains Mono'; font-size: 0.85rem; color: #2ecc71; margin-top: 15px; cursor: pointer; transition: 0.3s; }
         .prompt-box:hover { border-color: #2ecc71; background: rgba(46,204,113,0.05); }
+
+        .mil-header { background: linear-gradient(135deg, rgba(241,196,15,0.15), rgba(0,0,0,0.85)); border: 2px solid var(--accent-gold); border-radius: 20px; padding: 40px; }
+        .mil-stat { font-family: 'JetBrains Mono'; color: var(--accent-gold); font-size: 2.5rem; font-weight: 700; }
+        .mil-card { background: rgba(255,255,255,0.035); border: 1px solid #222; border-radius: 15px; padding: 30px; transition: 0.3s; }
+        .mil-card:hover { border-color: var(--accent-gold); background: rgba(241,196,15,0.05); transform: translateY(-5px); }
     </style>
 </head>
 <body>
@@ -87,7 +101,7 @@
         <img src="https://img.icons8.com/isometric/50/ffffff/radar.png" alt="Radar-Logo">
         <h2 style="font-size: 1.6rem; font-weight: 700; letter-spacing: -0.5px;">StockRadar <span style="color: var(--accent-gold); font-weight: 300;">PRO AI Dashboard</span></h2>
     </div>
-    <div style="font-size: 0.8rem; color: #555;">SOURCE: <span style="color: var(--bearish);">REAL_TIME_ANALYSIS</span> // STATUS: <span style="color: var(--bullish);">LIVE</span></div>
+    <div style="font-size: 0.8rem; color: #555;">SOURCE: <span style="color: var(--bearish);">GEMINI_2.5_PRO</span> // STATUS: <span style="color: var(--bullish);">LIVE</span></div>
 </header>
 
 <div class="app-layout">
@@ -99,14 +113,19 @@
         </div>
         <div class="panel">
             <div class="panel-title"><i class="fas fa-flag"></i> 宏觀戰略概覽</div>
-            <p style="font-size:0.75rem; color:#888; line-height:1.8;">當前 AI 分析引擎為 Gemini 2.5 Pro。數據為全球權威財經來源之即時彙整結果。</p>
+            <p id="macro-text" style="font-size:0.75rem; color:#888; line-height:1.8;">當前 AI 引擎已鎖定全球異動。資金流向高現金流韌性龍頭。聚焦 Gemini 深度風險揭示。</p>
+        </div>
+        <div class="panel">
+            <div class="panel-title"><i class="fas fa-rss"></i> 最新 AI 分析快訊</div>
+            <div id="newsFeed" style="max-height: 500px; overflow-y: auto;"></div>
         </div>
     </div>
 
     <!-- MAIN STAGE -->
     <div class="main-stage">
         <div class="tab-bar">
-            <div class="tab-btn active" id="tab-asset" onclick="switchView('asset')"><i class="fas fa-microchip"></i> 旗艦個股戰略偵察終端</div>
+            <div class="tab-btn active" onclick="switchView('asset')"><i class="fas fa-microchip"></i> 旗艦個股戰略偵察終端</div>
+            <div class="tab-btn" onclick="switchView('mil')"><i class="fas fa-gem"></i> 一百萬美元實戰策略</div>
         </div>
 
         <!-- ASSET DETAIL VIEW -->
@@ -141,19 +160,30 @@
                 <div id="sect-title" style="font-weight: 700; font-size: 1.1rem; padding: 20px; background: rgba(255,255,255,0.05); border-radius: 10px;"></div>
             </div>
         </div>
+
+        <!-- MILLIONAIRE VIEW -->
+        <div id="view-mil" class="tab-view">
+            <div class="mil-header">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:35px;">
+                    <div><h1 style="color:var(--accent-gold); font-size:2.5rem;">一百萬美元模擬實戰</h1><p style="color:#aaa;">30 歲抗風險獲利型策略：優化資產配置權重</p></div>
+                    <div class="mil-stat">$1,000,000</div>
+                </div>
+                <!-- Simple Dynamic Allocations -->
+                <div id="mil-allocs" style="display:grid; grid-template-columns: repeat(4, 1fr); gap:20px;"></div>
+            </div>
+        </div>
     </div>
 </div>
 
 <script>
-    // 從 Express 獲取動態數據
+    // 注入動態數據
     const RAW_DATA = [{"symbol":"ZIM","title":"Red Sea tensions spike shipping rates.","sentiment_score":4.2,"risk_level":"High","summary":"紅海危機導致運費飆升，資產變現能力增強。","timestamp":"2026-03-22 14:44:48"},{"symbol":"TSLA","title":"Tesla price cuts in China continues!","sentiment_score":-3.5,"risk_level":"Critical","summary":"特斯拉在中國市場面臨激烈競爭，毛利率壓力巨大。","timestamp":"2026-03-22 14:44:48"},{"symbol":"RACE","title":"Ferrari earnings beat expectations.","sentiment_score":2.5,"risk_level":"Low","summary":"奢侈品市場需求穩定，法拉利訂單排到 2026 年後。","timestamp":"2026-03-22 14:44:48"},{"symbol":"PLTR","title":"Palantir wins new US Army contract.","sentiment_score":1.2,"risk_level":"Medium","summary":"Palantir 持續穩定獲取政府大單。","timestamp":"2026-03-22 14:44:48"}];
     
-    // 轉換為前端 STORAGE
     const STORAGE = {};
     RAW_DATA.forEach(s => {
         STORAGE[s.symbol] = {
             symbol: s.symbol,
-            name: s.symbol, // 可以考慮在 DB 加入 Name 欄位
+            name: s.symbol, 
             riskLevel: s.risk_level,
             sentimentScore: s.sentiment_score,
             summary: s.summary,
@@ -167,12 +197,17 @@
     function init() { 
         if (!activeSym) return;
         renderNav(); 
+        renderNews();
+        renderMil();
         selectAsset(activeSym); 
     }
 
     function switchView(v) {
         document.querySelectorAll('.tab-view').forEach(view => view.classList.remove('active'));
         document.getElementById('view-' + v).classList.add('active');
+        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+        // Find the button that was clicked
+        event.target.classList.add('active');
     }
 
     function renderNav() {
@@ -186,13 +221,39 @@
         `).join('');
     }
 
+    function renderNews() {
+        document.getElementById('newsFeed').innerHTML = RAW_DATA.map(n => `
+            <div class="news-card">
+                <div style="margin-bottom:8px;">
+                    <span class="news-sentiment sentiment-${n.sentiment_score >= 0 ? 'positive' : 'negative'}">${n.sentiment_score >= 0 ? '利好' : '利空'}</span>
+                    <span style="font-size:0.65rem; color:#555;">${n.timestamp}</span>
+                </div>
+                <div style="font-weight:700; color:#fff; line-height:1.4;">${n.title}</div>
+            </div>
+        `).join('');
+    }
+
+    function renderMil() {
+        const allocs = RAW_DATA.slice(0, 4);
+        const total = 1000000;
+        document.getElementById('mil-allocs').innerHTML = allocs.map((a, i) => {
+            const weight = [40, 30, 20, 10][i] || 5;
+            return `
+                <div class="mil-card">
+                    <div>🚀 ${a.symbol} (${weight}%)</div>
+                    <div style="font-size:2rem; font-weight:700;">$${(total * weight / 100).toLocaleString()}</div>
+                </div>
+            `;
+        }).join('');
+    }
+
     function selectAsset(sym) {
         activeSym = sym; const s = STORAGE[sym];
         renderNav(); 
 
         document.getElementById('heroSym').innerText = sym;
-        document.getElementById('heroName').innerText = "Last Updated: " + s.timestamp;
-        document.getElementById('heroRating').innerText = "AI RISK LEVEL: " + s.riskLevel;
+        document.getElementById('heroName').innerText = "最後更新於: " + s.timestamp;
+        document.getElementById('heroRating').innerText = "AI 深度風險等級: " + s.riskLevel;
         document.getElementById('heroStatus').innerText = s.sentimentScore >= 0 ? 'BULL' : 'BEAR';
         document.getElementById('heroStatus').style.color = s.sentimentScore >= 0 ? 'var(--bullish)' : 'var(--bearish)';
 
@@ -205,7 +266,6 @@
     }
 
     function renderTV(symbol) {
-        // 部分代號可能需要對應 TV 的 Exchange
         let tvSym = symbol;
         if (symbol === 'TSLA') tvSym = 'NASDAQ:TSLA';
         if (symbol === 'PLTR') tvSym = 'NYSE:PLTR';
