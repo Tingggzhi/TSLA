@@ -146,7 +146,7 @@
 
 <script>
     // 從 Express 獲取動態數據
-    const RAW_DATA = <%- JSON.stringify(stocks) %>;
+    const RAW_DATA = [{"symbol":"ZIM","title":"Red Sea tensions spike shipping rates.","sentiment_score":4.2,"risk_level":"High","summary":"紅海危機導致運費飆升，資產變現能力增強。","timestamp":"2026-03-22 14:44:48"},{"symbol":"TSLA","title":"Tesla price cuts in China continues!","sentiment_score":-3.5,"risk_level":"Critical","summary":"特斯拉在中國市場面臨激烈競爭，毛利率壓力巨大。","timestamp":"2026-03-22 14:44:48"},{"symbol":"RACE","title":"Ferrari earnings beat expectations.","sentiment_score":2.5,"risk_level":"Low","summary":"奢侈品市場需求穩定，法拉利訂單排到 2026 年後。","timestamp":"2026-03-22 14:44:48"},{"symbol":"PLTR","title":"Palantir wins new US Army contract.","sentiment_score":1.2,"risk_level":"Medium","summary":"Palantir 持續穩定獲取政府大單。","timestamp":"2026-03-22 14:44:48"}];
     
     // 轉換為前端 STORAGE
     const STORAGE = {};

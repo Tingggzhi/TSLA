@@ -21,6 +21,7 @@ module.exports = {
   scheduler: {
     dailyCrawl: '0 6 * * *',   // 每天早上 6:00 (美股收盤後) 爬取
     dailyReport: '0 9 * * *',  // 每天早上 9:00 發送 LINE 摘要
+    backupTime: '0 2 * * *',   // 每日凌晨 2:00 執行 GitHub + Obsidian 備份
     warModInterval: '*/15 * * * *' // 戰時快門模式：每 15 分鐘一次
   }
 };
