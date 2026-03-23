@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>StockRadar v1.0 | 戰情管理系統</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <header>
+    <div class="logo-section">
+      <img src="/logo.png" alt="StockRadar Logo" onerror="this.src='https://img.icons8.com/nolan/128/combo-chart.png';">
+      <div class="logo-text">StockRadar <span style="font-weight: 300;">v1.0</span></div>
+    </div>
+    <div class="status-indicator">
+      <div class="dot"></div>
+      <span style="font-size: 0.85rem; color: #888; letter-spacing: 1px;">LIVE MONITORING</span>
+    </div>
+  </header>
+  
+  <div class="main-container">
+    <div class="stock-grid">
+      <% if (stocks && stocks.length > 0) { %>
+        <% stocks.forEach(function(stock) { %>
+          <div class="stock-card">
+            <div class="stock-header">
+              <div class="symbol-box">
+                <%= stock.symbol %>
+                <span class="name-zh"><%= stock.name || 'Unknown Asset' %></span>
+              </div>
+              <div class="risk-badge risk-<%= stock.risk_level %>">
+                <%= stock.risk_level %>
+              </div>
+            </div>
+            
+            <% 
+              let score = stock.sentiment_score || 0;
+              // Score range -5 to 5 -> 0 to 100
+              let percent = ((parseFloat(score) + 5) / 10) * 100;
+              let barColor = score < 0 ? 'var(--error)' : (score > 1 ? 'var(--success)' : 'var(--accent-gold)');
+            %>
+            <div class="sentiment-section">
+              <div class="sentiment-label">
+                <span>情緒極限分析</span>
+                <span style="color: <%= barColor %>; font-family: 'JetBrains Mono', monospace;"><%= score.toFixed(1) %> / 5.0</span>
+              </div>
+              <div class="sentiment-bar">
+                <div class="sentiment-fill" style="width: <%= percent %>%; background: <%= barColor %>; box-shadow: 0 0 10px <%= barColor %>;"></div>
+              </div>
+              <div style="display: flex; justify-content: space-between; font-size: 0.65rem; color: #444; margin-top: 4px;">
+                <span>BEARISH (-5)</span>
+                <span>NEUTRAL (0)</span>
+                <span>BULLISH (+5)</span>
+              </div>
+            </div>
+            
+            <div class="summary-text">
+              "<%= stock.summary || '目前尚無即時分析。' %>"
+            </div>
+            
+            <div class="footer-info">
+              <div class="source">來源: <%= stock.source || 'GLOBAL_RADAR' %></div>
+              <div class="time">LAST_SCAN: <%= stock.timestamp || 'N/A' %></div>
+            </div>
+          </div>
+        <% }); %>
+      <% } else { %>
+        <div class="empty-state">
+          <i>📉</i>
+          <h3>目前尚無任何監控數據</h3>
+          <p>請確認爬蟲模組是否已正確啟動或資料庫是否有資料。</p>
+        </div>
+      <% } %>
+    </div>
+  </div>
+  
+  <footer style="text-align: center; padding: 40px; color: #333; font-size: 0.7rem; letter-spacing: 2px;">
+    &copy; 2026 STOCKRADAR WAR ROOM. ALL RIGHTS RESERVED.
+  </footer>
+</body>
+</html>

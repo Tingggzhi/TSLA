@@ -1,0 +1,270 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;700&family=JetBrains+Mono:wght@400;700&display=swap');
+
+:root {
+  /* HSL Tailored Color Palette - Premium War Room Vibes */
+  --bg-deep: hsl(220, 25%, 5%);
+  --bg-darker: hsl(220, 25%, 8%);
+  --accent-gold: hsl(45, 100%, 60%);
+  --accent-gold-soft: hsl(45, 100%, 60%, 0.1);
+  --accent-blue: hsl(195, 100%, 55%);
+  --accent-blue-soft: hsl(195, 100%, 55%, 0.1);
+  --error: hsl(0, 85%, 60%);
+  --success: hsl(145, 65%, 50%);
+  --warning: hsl(35, 95%, 55%);
+  
+  --glass-bg: hsla(220, 25%, 12%, 0.6);
+  --glass-border: hsla(220, 25%, 20%, 0.8);
+  --glass-shadow: 0 12px 32px 0 hsla(0, 0%, 0%, 0.37);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: radial-gradient(circle at 50% -20%, hsl(220, 30%, 15%), var(--bg-deep) 70%);
+  color: #f0f0f0;
+  font-family: 'Outfit', 'Inter', sans-serif;
+  min-height: 100vh;
+  line-height: 1.6;
+  overflow-x: hidden;
+}
+
+/* Background Animation */
+body::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: url("https://www.transparenttextures.com/patterns/carbon-fibre.png");
+  opacity: 0.15;
+  pointer-events: none;
+  z-index: -1;
+}
+
+header {
+  padding: 30px 60px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: linear-gradient(to bottom, rgba(5,7,10,0.95), rgba(5,7,10,0.4));
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--glass-border);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+}
+
+.logo-section {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.logo-section img {
+  height: 50px;
+  border-radius: 8px;
+  box-shadow: 0 0 15px var(--accent-blue-soft);
+}
+
+.logo-text {
+  font-size: 1.5rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  background: linear-gradient(45deg, var(--accent-gold), #fff);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.status-indicator {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.dot {
+  width: 10px;
+  height: 10px;
+  background-color: var(--success);
+  border-radius: 50%;
+  box-shadow: 0 0 10px var(--success);
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.4); opacity: 0.6; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.main-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 40px;
+}
+
+.stock-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 25px;
+}
+
+.stock-card {
+  background: var(--glass-bg);
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--glass-border);
+  border-radius: 20px;
+  padding: 24px;
+  position: relative;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  box-shadow: var(--glass-shadow);
+  display: flex;
+  flex-direction: column;
+}
+
+.stock-card:hover {
+  transform: translateY(-8px) scale(1.02);
+  border-color: var(--accent-gold);
+  box-shadow: 0 20px 40px rgba(0,0,0,0.6), 0 0 20px var(--accent-blue-soft);
+}
+
+.stock-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 20px;
+  background: linear-gradient(135deg, rgba(255,255,255,0.05) 0%, transparent 40%);
+  pointer-events: none;
+}
+
+.stock-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 20px;
+}
+
+.symbol-box {
+  background: var(--bg-darker);
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 700;
+  color: var(--accent-gold);
+  border-left: 3px solid var(--accent-gold);
+}
+
+.name-zh {
+  display: block;
+  font-size: 0.9rem;
+  color: #888;
+  margin-top: 4px;
+}
+
+.risk-badge {
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 4px 12px;
+  border-radius: 30px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.risk-Critical { background: hsla(0, 85%, 60%, 0.2); color: var(--error); border: 1px solid var(--error); box-shadow: 0 0 10px hsla(0, 85%, 60%, 0.3); }
+.risk-High { background: hsla(35, 95%, 55%, 0.2); color: var(--warning); border: 1px solid var(--warning); }
+.risk-Medium { background: hsla(45, 100%, 60%, 0.2); color: var(--accent-gold); border: 1px solid var(--accent-gold); }
+.risk-Low { background: hsla(145, 65%, 50%, 0.2); color: var(--success); border: 1px solid var(--success); }
+
+.sentiment-section {
+  margin: 20px 0;
+}
+
+.sentiment-label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.85rem;
+  margin-bottom: 8px;
+  color: #ccc;
+}
+
+.sentiment-bar {
+  height: 10px;
+  background: #111;
+  border-radius: 20px;
+  overflow: hidden;
+  position: relative;
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);
+}
+
+.sentiment-fill {
+  height: 100%;
+  transition: width 1.2s cubic-bezier(0.22, 1, 0.36, 1);
+  box-shadow: 0 0 15px currentcolor;
+}
+
+.summary-text {
+  font-size: 0.95rem;
+  color: #ddd;
+  background: rgba(0,0,0,0.2);
+  padding: 15px;
+  border-radius: 12px;
+  margin-top: auto;
+  min-height: 80px;
+  display: flex;
+  align-items: center;
+  position: relative;
+}
+
+.summary-text::before {
+  content: "戰情簡報:";
+  position: absolute;
+  top: -8px;
+  left: 10px;
+  font-size: 0.65rem;
+  background: var(--bg-deep);
+  padding: 0 5px;
+  color: #666;
+  text-transform: uppercase;
+}
+
+.footer-info {
+  margin-top: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.75rem;
+  color: #555;
+  border-top: 1px solid rgba(255,255,255,0.05);
+  padding-top: 15px;
+}
+
+.footer-info .time {
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* Scrollbar Premium Style */
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-track { background: var(--bg-deep); }
+::-webkit-scrollbar-thumb { 
+  background: #333; 
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover { background: #444; }
+
+/* Empty state */
+.empty-state {
+  grid-column: 1/-1;
+  text-align: center;
+  padding: 100px 0;
+  opacity: 0.5;
+}
+
+.empty-state i { font-size: 4rem; display: block; margin-bottom: 20px; }

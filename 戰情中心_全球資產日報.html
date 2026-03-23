@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StockRadar | 旗艦戰情終端 v10.3 (情緒判讀版)</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Noto+Sans+TC:wght@300;400;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
+    <style>
+        :root {
+            --bg-deep: #05070a;
+            --bg-card: rgba(18, 22, 28, 0.98);
+            --accent-gold: #f1c40f;
+            --bullish: #ff4d4d; /* 🔴 亞洲漲 */
+            --bearish: #2ecc71; /* 🟢 亞洲跌 */
+            --border-glass: rgba(255, 255, 255, 0.08);
+            --text-main: #f0f0f0;
+            --text-dim: #777;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            background-color: var(--bg-deep);
+            background-image: radial-gradient(circle at 50% -15%, #1c2635, var(--bg-deep) 75%);
+            color: var(--text-main); font-family: 'Outfit', 'Noto Sans TC', sans-serif;
+            font-size: 0.9rem; line-height: 1.6; overflow-x: hidden;
+        }
+
+        header {
+            padding: 15px 40px; display: flex; justify-content: space-between; align-items: center;
+            backdrop-filter: blur(25px); background: rgba(5,7,10,0.7); border-bottom: 1px solid var(--border-glass);
+            position: sticky; top: 0; z-index: 2000;
+        }
+        .logo-box { display: flex; align-items: center; gap: 12px; }
+        .logo-box img { height: 32px; filter: drop-shadow(0 0 5px var(--accent-gold)); }
+
+        .app-layout { max-width: 1800px; margin: 25px auto; padding: 0 25px; display: grid; grid-template-columns: 320px 1fr; gap: 25px; }
+
+        .sidebar { display: flex; flex-direction: column; gap: 20px; }
+        .panel { 
+            background: var(--bg-card); border: 1px solid var(--border-glass); border-radius: 20px; 
+            padding: 22px; box-shadow: 0 15px 45px rgba(0,0,0,0.6);
+        }
+        .panel-title { font-size: 0.75rem; color: #555; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 15px; display: flex; align-items: center; gap: 10px; border-left: 3px solid var(--accent-gold); padding-left: 10px; }
+
+        .asset-card {
+            background: rgba(255,255,255,0.02); border: 1px solid var(--border-glass); padding: 18px;
+            border-radius: 14px; cursor: pointer; transition: 0.3s; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;
+        }
+        .asset-card.active { border-color: var(--accent-gold); background: rgba(241,196,15,0.1); }
+        .asset-card:hover:not(.active) { background: rgba(255,255,255,0.05); transform: translateX(5px); }
+
+        .main-stage { display: flex; flex-direction: column; gap: 25px; }
+
+        .tab-bar { display: flex; gap: 15px; border-bottom: 1px solid #111; margin-bottom: 15px; flex-wrap: wrap; }
+        .tab-btn { padding: 15px 25px; cursor: pointer; color: #666; font-weight: 700; position: relative; transition: 0.3s; font-size: 0.95rem; }
+        .tab-btn.active { color: var(--accent-gold); font-size: 1rem; }
+        .tab-btn.active::after { content: ''; position: absolute; bottom: -1px; left: 0; width: 100%; height: 4px; background: var(--accent-gold); border-radius: 5px; }
+
+        .tab-view { display: none; }
+        .tab-view.active { display: flex; flex-direction: column; gap: 25px; }
+
+        /* General Section Styling */
+        .ency-sect { background: rgba(0,0,0,0.35); border-radius: 20px; padding: 30px; border: 1px solid rgba(255,255,255,0.03); }
+        .ency-sect h3 { color: var(--accent-gold); font-size: 1.25rem; border-left: 5px solid var(--accent-gold); padding-left: 20px; margin-bottom: 25px; }
+
+        /* Highlight Boxes */
+        .expert-box { background: rgba(52, 152, 219, 0.08); border: 1px solid rgba(52, 152, 219, 0.3); border-radius: 15px; padding: 30px; margin-top: 10px; line-height: 1.8; }
+        .advice-box { background: rgba(241,196,15,0.08); border: 1px solid rgba(241,196,15,0.25); border-radius: 15px; padding: 30px; border-left: 6px solid var(--accent-gold); }
+
+        .chart-container { height: 620px; width: 100%; border-radius: 20px; overflow: hidden; border: 1px solid var(--border-glass); background: #000; }
+
+        .tag { border-radius: 50px; padding: 5px 15px; font-size: 0.75rem; font-weight: 700; margin-right: 8px; border: 1px solid transparent; }
+        .tag-pro { background: rgba(255,77,77,0.1); color: var(--bullish); border-color: var(--bullish); }
+        .tag-con { background: rgba(46,204,113,0.1); color: var(--bearish); border-color: var(--bearish); }
+
+        /* NEWS SENTIMENT BOXES (NEW) */
+        .news-sentiment { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 0.65rem; font-weight: 800; text-transform: uppercase; margin-right: 10px; }
+        .sentiment-positive { background: var(--bullish); color: #fff; } /* 利好 */
+        .sentiment-negative { background: var(--bearish); color: #fff; } /* 利空 */
+        .sentiment-neutral { background: #34495e; color: #ecf0f1; } /* 中性 */
+
+        .timeline-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; }
+        .q-card { background: rgba(0,0,0,0.25); border: 1px solid #1a1a1a; padding: 22px; border-radius: 15px; height: 100%; }
+        .q-card h4 { color: var(--accent-gold); font-size: 0.75rem; margin-bottom: 12px; font-family: 'JetBrains Mono'; text-transform: uppercase; }
+
+        /* News Links (Restore v9.8 Clickability) */
+        .news-card { background: rgba(255,255,255,0.02); border: 1px solid var(--border-glass); border-radius: 12px; padding: 20px; text-decoration: none; display: block; margin-bottom: 12px; transition: 0.3s; color: inherit; cursor: pointer; }
+        .news-card:hover { border-color: var(--accent-gold); background: rgba(255,255,255,0.05); transform: translateX(5px); }
+
+        /* AI Prompts Box */
+        .prompt-box { background: #000; border: 1px dashed #444; border-radius: 10px; padding: 20px; font-family: 'JetBrains Mono'; font-size: 0.85rem; color: #2ecc71; margin-top: 15px; cursor: pointer; transition: 0.3s; }
+        .prompt-box:hover { border-color: #2ecc71; background: rgba(46,204,113,0.05); }
+
+        /* Millionaire Styles (Restore v9.9 Simulation) */
+        .mil-header { background: linear-gradient(135deg, rgba(241,196,15,0.15), rgba(0,0,0,0.85)); border: 2px solid var(--accent-gold); border-radius: 20px; padding: 40px; }
+        .mil-stat { font-family: 'JetBrains Mono'; color: var(--accent-gold); font-size: 2.5rem; font-weight: 700; }
+        .mil-card { background: rgba(255,255,255,0.035); border: 1px solid #222; border-radius: 15px; padding: 30px; transition: 0.3s; }
+        .mil-card:hover { border-color: var(--accent-gold); background: rgba(241,196,15,0.05); transform: translateY(-5px); }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="logo-box">
+        <img src="https://img.icons8.com/isometric/50/ffffff/radar.png" alt="Radar-Logo">
+        <h2 style="font-size: 1.6rem; font-weight: 700; letter-spacing: -0.5px;">StockRadar <span style="color: var(--accent-gold); font-weight: 300;">PRO v10.3 Insight Plus</span></h2>
+    </div>
+    <div style="font-size: 0.8rem; color: #555;">SOURCE: <span style="color: var(--bearish);">TRADINGVIEW_REAL_TIME</span> // SENTIMENT: <span style="color: var(--bullish);">ENABLED</span></div>
+</header>
+
+<div class="app-layout">
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+        <div class="panel">
+            <div class="panel-title"><i class="fas fa-satellite"></i> 監測資產核心</div>
+            <div id="assetNav"></div>
+        </div>
+        <!-- Macro Summary Box -->
+        <div id="macroSummaryBox"></div>
+        <div class="panel">
+            <div class="panel-title"><i class="fas fa-chart-line"></i> 市況總結</div>
+            <button onclick="switchView('market')" style="width:100%; border:1px solid #333; padding:15px; border-radius:10px; background:rgba(255,255,255,0.05); color:#fff; cursor:pointer; font-weight:700; font-size:0.85rem;">🔥 查看今日漲跌十強</button>
+        </div>
+        <div class="panel">
+            <div class="panel-title"><i class="fas fa-rss"></i> 各股情報流 (情緒標註)</div>
+            <div id="newsFeed" style="max-height: 500px; overflow-y: auto;"></div>
+        </div>
+    </div>
+
+    <!-- MAIN STAGE -->
+    <div class="main-stage">
+        <div class="tab-bar">
+            <div class="tab-btn active" id="tab-asset" onclick="switchView('asset')"><i class="fas fa-microchip"></i> 旗艦個股戰略偵察終端</div>
+            <div class="tab-btn" id="tab-mil" onclick="switchView('mil')"><i class="fas fa-gem"></i> 一百萬美元實戰策略</div>
+            <div class="tab-btn" id="tab-market" onclick="switchView('market')"><i class="fas fa-trophy"></i> 市況看板</div>
+        </div>
+
+        <!-- ASSET DETAIL VIEW -->
+        <div id="view-asset" class="tab-view active">
+            <div class="panel">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <div><h1 id="heroSym" style="font-size: 4rem; font-family:'JetBrains Mono'; margin-bottom:5px;">-</h1><p id="heroName" style="color:#666; font-size:1.2rem;">-</p></div>
+                    <div style="text-align:right;">
+                        <h2 id="heroPrice" style="font-size: 3.5rem; font-weight:700; color:var(--bullish); font-family:'JetBrains Mono';">$0.00</h2>
+                        <div id="heroRating" style="color:var(--accent-gold); font-weight:700; font-size:1rem;">-</div>
+                    </div>
+                </div>
+                <div style="margin:25px 0 15px 0; background:rgba(0,0,0,0.5); padding:15px 25px; border-radius:15px; display:flex; justify-content:space-between; align-items:center;">
+                    <div style="color:var(--bullish); font-weight:700; font-size:0.9rem;"><i class="fas fa-clock"></i> 實時交易行情：RED UP // GREEN DOWN</div>
+                </div>
+                <div id="tradingview_chart" class="chart-container"></div>
+            </div>
+
+            <!-- 30yo Strategic Hub -->
+            <div class="ency-sect" style="border: 2px solid var(--accent-gold); background: rgba(241,196,15,0.03);">
+                <h3><i class="fas fa-chess-knight"></i> 30歲大戰略指揮中心</h3>
+                <div id="sect-advice"></div>
+            </div>
+
+            <!-- Analyst Insight (Blue box) -->
+            <div class="ency-sect">
+                <h3><i class="fas fa-user-graduate"></i> 專業分析師深度點評</h3>
+                <div id="sect-analyst-expert"></div>
+            </div>
+
+            <!-- Risk Deep Dive -->
+            <div class="ency-sect" style="border: 1px solid #3498db; background: rgba(52,152,219,0.03);">
+                <h3><i class="fas fa-vault"></i> 營運與一年內抗風險深度判讀</h3>
+                <div id="sect-risk-deep" style="display:grid; grid-template-columns:1fr 1fr; gap:35px;"></div>
+            </div>
+
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:25px;">
+                <div class="ency-sect"><h3>營收引擎解析</h3><div id="sect-streams"></div></div>
+                <div class="ency-sect"><h3>五年歷史大事記</h3><div id="sect-history"></div></div>
+            </div>
+
+            <div class="ency-sect"><h3>2024-2025 季度重大 Flag 事件</h3><div id="sect-quarters" class="timeline-grid"></div></div>
+
+            <div class="ency-sect">
+                <h3>管理層與 SWOT 體質</h3>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:30px;">
+                    <div id="sect-swot"></div>
+                    <table style="width:100%; border-collapse:collapse;"><tbody id="execBody"></tbody></table>
+                </div>
+            </div>
+
+            <div class="ency-sect"><h3>未來三年成長爆發點</h3><div id="sect-potential"></div></div>
+        </div>
+
+        <!-- MILLIONAIRE VIEW -->
+        <div id="view-mil" class="tab-view">
+            <div class="mil-header">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:35px;">
+                    <div><h1 style="color:var(--accent-gold); font-size:2.5rem;">假設你擁有一百萬美元模擬實戰</h1><p style="color:#aaa;">30 歲抗風險獲利型策略：優化資產配置權重</p></div>
+                    <div class="mil-stat">$1,000,000</div>
+                </div>
+                <!-- Breakdown -->
+                <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:20px;">
+                    <div class="mil-card"><div>🚀 TSLA (40%)</div><div style="font-size:2rem; font-weight:700;">$400,000</div></div>
+                    <div class="mil-card"><div>🛡️ VOO (30%)</div><div style="font-size:2rem; font-weight:700;">$300,000</div></div>
+                    <div class="mil-card"><div>💡 PLTR (15%)</div><div style="font-size:2rem; font-weight:700;">$150,000</div></div>
+                    <div class="mil-card"><div>💎 RACE (10%)</div><div style="font-size:2rem; font-weight:700;">$100,000</div></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- MARKET VIEW -->
+        <div id="view-market" class="tab-view">
+             <div style="display:grid; grid-template-columns:1fr 1fr; gap:30px;">
+                <div class="panel"><h2 style="color:var(--bullish); margin-bottom:20px;">🔥 今日漲幅十強榜 (亞洲紅)</h2><table style="width:100%; border-collapse:collapse;" id="gainerBody"></table></div>
+                <div class="panel"><h2 style="color:var(--bearish); margin-bottom:20px;">📉 今日跌幅十強榜 (亞洲綠)</h2><table style="width:100%; border-collapse:collapse;" id="loserBody"></table></div>
+             </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const STORAGE = {
+        TSLA: {
+            symbol: "NASDAQ:TSLA", name: "Tesla Inc. (特斯拉)", price: "$367.96", isUp: true, change: "+2.45%", rating: "Strong Buy (Target $415)",
+            streams: ["👉 電動車銷售與製造 (84% 核心來源)", "👉 能源儲存（Megapack）商業模式爆發期", "👉 FSD 軟體授權與 AI 訂閱營收", "👉 Optimus 人型機器人長期成長導向"],
+            expertView: "特斯拉正處於硬體向 AI 平台轉折的奇點。FSD V13 是今年最重要的催化劑，若能成功進入軟體高毛利週期，股價具備翻倍空間。能源部門目前被嚴重低估。",
+            risk: { ratio: "2.4x (極度充沛)", flow: "自由現金流與研發投入比率健康，負債表極其乾淨。即使車市進入去庫存週期，現有現金存量足以支撐其在不發債情況下維持三年。", resc: "優異。能源業務對沖車市疲軟。FSD 軟體化轉型將帶動未來一年毛利持續擴張。" },
+            quarters: { Q1: "Cybertruck 產能達成穩定規模。", Q2: "Robotaxi 發表日與願景重構。", Q3: "能源部門利潤釋放期。", Q4: "歷史最高交付季紀錄。" },
+            history: ["📉 2021: 納入標普引發牛市", "🔴 2022: 升息環境估值修正", "📈 2024: 重啟 Robotaxi 進度"],
+            potential: ["🔥 FSD 全球監管放行利潤轉折", "🔥 第三代平臺 (Model 2) 發布", "🔥 Optimus 量產商用規模化"],
+            swot: { pros: ["#技術絕對領先", "#垂直整合能力", "#品牌溢價"], cons: ["#高估值倍數風險", "#CEO言論噪音"] },
+            execs: [{ t: "CEO", n: "Elon Musk", d: "AI 靈魂。" }],
+            advice: { alloc: "12% - 15%", logic: "TSLA 是實現財富倍增的核心引擎。30歲具備跨越週期的韌性，能消化高波動。", why: ["<strong>複利跨度：</strong> 距離退休 30 年，能完整捕捉 AI 爆發期。", "<strong>資本消化：</strong> 風險承受力支持重倉位配置。"], prompts: ["請分析 TSLA 過去 5 年升息表現。", "測算目前 P/E 偏離度。"] },
+            news: [
+                { s: "positive", t: "利好", title: "FSD V13 全球推送在即，毛利預期大幅上調", url: "https://finance.yahoo.com/quote/TSLA" },
+                { s: "neutral", t: "中性", title: "柏林工廠產能小幅調整以優化庫存", url: "https://www.reuters.com/search/news?blob=TSLA" },
+                { s: "negative", t: "利空", title: "NHTSA 啟動新一輪輔助駕駛安全性調查", url: "https://finance.google.com/finance/quote/TSLA:NASDAQ" }
+            ]
+        },
+        ZIM: {
+            symbol: "NYSE:ZIM", name: "ZIM Integrated (以星航運)", price: "$25.88", isUp: true, change: "+9.22%", rating: "Neutral (Target $28)",
+            streams: ["👉 全球貨櫃航運 (地緣依賴性強)", "👉 數字化物流平台服務"],
+            expertView: "典型週期股。目前完全受紅海危機溢價支持。只要衝突不結束，高額現金流與派息將持續支撐其地板價。",
+            risk: { ratio: "1.2x (普通)", flow: "現金流呈極度週期性。高度敏感於 SCFI 運價指數。獲利主要捕捉地緣政治導致的運力短缺。", resc: "中。一年內取決於地緣衝突。若和平達成，股價面臨劇烈修正風險。" },
+            quarters: { Q1: "紅海改道導致運力緊張。", Q2: "運價暴增引發業績大幅反彈。" },
+            history: ["2021: 供應鏈紅利錄及利潤", "2025: 受局勢支持強修復"],
+            potential: ["🚩 新造低排船隊優勢", "🚩 亞非細分市場滲透"],
+            swot: { pros: ["#高股息特性", "#運力調度靈活"], cons: ["#週期性劇烈回縮", "#地緣和平風險"] },
+            execs: [{ t: "CEO", n: "Eli Glickman", d: "資深舵手。" }],
+            advice: { alloc: "3% - 5%", logic: "標誌性衛星對沖倉位，主要捕捉地緣溢價。", why: ["捕捉短期溢價獲利並轉投核心資產。"], prompts: ["紅海停火預期下修測算。"] },
+            news: [
+                { s: "positive", t: "利好", title: "SCFI 運價指數連三週大漲，ZIM 獲利預期上修", url: "https://finance.yahoo.com/quote/ZIM" },
+                { s: "negative", t: "利空", title: "地緣談判傳出進展，航運溢價可能面臨修正", url: "https://www.reuters.com/search/news?blob=ZIM" }
+            ]
+        },
+        RACE: {
+            symbol: "NYSE:RACE", name: "Ferrari (法拉利)", price: "$323.51", isUp: true, change: "+1.35%", rating: "Overweight (Target $395)",
+            streams: ["👉 V12 超跑與訂製化銷售", "👉 品牌授權與 F1 溢價貢獻"],
+            expertView: "奢侈品標竿，具備全世界最強的定價護城河。其訂單排期已至 2027 年，業績預見性幾乎為汽車業最高。",
+            risk: { ratio: "1.8x (健康穩固)", flow: "現金流極穩健。預收定金機制對抗宏觀風險。淨利潤率維持在 25% 以上。", resc: "極強。對宏觀經濟衰退接近免疫。是一年內最穩定的抗風險資產。" },
+            quarters: { Q1: "客製化提升平均單價。", Q2: "F1 賽季溢價效應發酵。" },
+            history: ["2022: 首款 SUV 推出成功", "2024: 全年指引上修"],
+            potential: ["💎 首款全電法拉利 (2025)", "💎 擴大品牌生態系統"],
+            swot: { pros: ["#極端品牌護城河", "#訂單能見度"], cons: ["#電動化轉型挑戰"] },
+            execs: [{ t: "CEO", n: "Benedetto Vigna", d: "技術決策者。" }],
+            advice: { alloc: "7% - 8%", logic: "配置中的金邊資產，作為壓艙石。", why: ["<strong>防禦之盾：</strong> 極強定價權對沖通膨。"], prompts: ["對比 RACE 與 S&P 500 回撤。"] },
+            news: [
+                { s: "positive", t: "利好", title: "2027 年前產能已全數售罄，利潤成長能見度極高", url: "https://finance.yahoo.com/quote/RACE" },
+                { s: "neutral", t: "中性", title: "一級方程式賽事開發進度符合預期", url: "https://www.reuters.com/search/news?blob=RACE" }
+            ]
+        },
+        PLTR: {
+            symbol: "NYSE:PLTR", name: "Palantir AI (帕蘭泰爾)", price: "$150.68", isUp: false, change: "-3.12%", rating: "Buy (Target $185)",
+            streams: ["👉 國防 Gotham 系統 (地板)", "👉 商業 AIP 平台 (天花板)"],
+            expertView: "數據主權與決策的大腦。國防合約保障了其業績下限，商業端 AIP 則提供了瘋狂的增速天花板。",
+            risk: { ratio: "2.1x (充沛)", flow: "獲利轉正後的現金流爆發極快。標普 500 被動買盤支撐強勁。", resc: "優異。國防支出增加帶動需求。商業端 AIP Bootcamp 機制大幅降低獲客成本。" },
+            quarters: { Q1: "AIP 商業客戶暴增。", Q2: "正式納入標普 500。" },
+            history: ["2023: 商業轉型成功"],
+            potential: ["💡 數位決策引擎壟斷", "💡 AIP 轉訂閱高毛利"],
+            swot: { pros: ["#數據決策主權", "#國防地板支撐"], cons: ["#政治噪音影響"] },
+            execs: [{ t: "CEO", n: "Alex Karp", d: "靈魂异才。" }],
+            advice: { alloc: "8% - 10%", logic: "數據主權核心持倉，布局未來十年基礎設施。", why: ["<strong>卡位龍頭：</strong> 壟斷性優勢。"], prompts: ["計算 AIP 增速與市佔。"] },
+            news: [
+                { s: "positive", t: "利好", title: "美國軍方追加 AIP 合約，國防地板價再度夯實", url: "https://finance.yahoo.com/quote/PLTR" },
+                { s: "neutral", t: "中性", title: "財報發布前夕市場觀望氣氛濃厚", url: "https://www.reuters.com/search/news?blob=PLTR" }
+            ]
+        }
+    };
+
+    let activeSym = 'TSLA';
+
+    function init() { renderNav(); renderMacro(); renderMarket(); selectAsset('TSLA'); }
+
+    function switchView(v) {
+        document.querySelectorAll('.tab-view').forEach(view => view.classList.remove('active'));
+        document.getElementById('view-' + v).classList.add('active');
+        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+        if(document.getElementById('tab-' + v)) document.getElementById('tab-' + v).classList.add('active');
+        if(v === 'asset') renderTV(STORAGE[activeSym].symbol);
+    }
+
+    function renderNav() {
+        document.getElementById('assetNav').innerHTML = Object.keys(STORAGE).map(sym => `
+            <div class="asset-card ${sym === activeSym ? 'active' : ''}" onclick="selectAsset('${sym}')">
+                <div><div style="font-weight:700; color:#fff;">${sym}</div><div style="font-size:0.6rem; color:#666;">${STORAGE[sym].name}</div></div>
+                <div style="text-align:right;">
+                    <div style="color:${STORAGE[sym].isUp ? 'var(--bullish)' : 'var(--bearish)'}; font-weight:700;">${STORAGE[sym].price}</div>
+                    <div style="font-size:0.65rem; color:${STORAGE[sym].isUp ? 'var(--bullish)' : 'var(--bearish)'};">${STORAGE[sym].change}</div>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function renderMacro() {
+        document.getElementById('macroSummaryBox').innerHTML = `
+            <div class="panel" style="background:rgba(52,152,219,0.08); border:1px solid rgba(52,152,219,0.2);">
+                <div class="panel-title" style="color:#3498db; border-left-color:#3498db;"><i class="fas fa-flag"></i> 宏觀戰略概覽</div>
+                <p style="font-size:0.75rem; color:#888; line-height:1.8;">降息預期反覆，資金流向具備現金流韌性的龍頭標點。本週聚焦大型科技股 AI 盈利落地情況。</p>
+            </div>
+        `;
+    }
+
+    function selectAsset(sym) {
+        activeSym = sym; const s = STORAGE[sym];
+        renderNav(); switchView('asset');
+        
+        document.getElementById('heroSym').innerText = sym;
+        document.getElementById('heroName').innerText = s.name;
+        document.getElementById('heroPrice').innerText = s.price;
+        document.getElementById('heroPrice').style.color = s.isUp ? 'var(--bullish)' : 'var(--bearish)';
+        document.getElementById('heroRating').innerText = s.rating;
+
+        document.getElementById('sect-advice').innerHTML = `
+            <div class="advice-box">
+                <div style="color:var(--accent-gold); font-weight:700; font-size:1.2rem; margin-bottom:15px;">⚡ 30歲分配建議：${s.advice.alloc}</div>
+                <p style="color:#eee; line-height:1.8; margin-bottom:20px;">${s.advice.logic}</p>
+                <div style="background:rgba(255,255,255,0.03); padding:20px; border-radius:15px;">
+                    <strong style="font-size:0.85rem; color:var(--accent-gold);">為什麼這樣分配？</strong>
+                    <ul style="padding-left:20px; margin-top:10px; font-size:0.9rem; color:#ccc; line-height:2;">
+                        ${s.advice.why.map(w => `<li>${w}</li>`).join('')}
+                    </ul>
+                </div>
+                <div style="display:flex; flex-wrap:wrap; gap:12px; margin-top:20px;">
+                    ${s.advice.prompts.map(p => `<div class="prompt-box" onclick="copyText('${p}')"><i class="fas fa-terminal"></i> ${p}</div>`).join('')}
+                </div>
+            </div>
+        `;
+
+        document.getElementById('sect-analyst-expert').innerHTML = `<div class="expert-box"><p style="font-style:italic; color:#ccc;">"${s.expertView}"</p></div>`;
+        document.getElementById('sect-risk-deep').innerHTML = `
+            <div class="q-card" style="background:rgba(52,152,219,0.03); border-color:#222;"><h4>💵 現金流與營運解析 (${s.risk.ratio})</h4><p style="font-size:0.85rem; color:#aaa;">${s.risk.flow}</p></div>
+            <div class="q-card" style="background:rgba(52,152,219,0.03); border-color:#222;"><h4>🛡️ 未來一年抗風險判讀</h4><p style="font-size:0.85rem; color:#aaa;">${s.risk.resc}</p></div>
+        `;
+
+        document.getElementById('sect-streams').innerHTML = `<ul style="padding-left:18px; color:#ccc;">${s.streams.map(i => `<li style="margin-bottom:8px;">${i}</li>`).join('')}</ul>`;
+        document.getElementById('sect-history').innerHTML = `<ul style="font-size:0.85rem; color:#888;">${s.history.map(h => `<li style="margin-bottom:8px;">${h}</li>`).join('')}</ul>`;
+        document.getElementById('sect-quarters').innerHTML = Object.keys(s.quarters).map(q => `<div class="q-card"><h4>${q}</h4><p style="font-size:0.75rem; color:#aaa; line-height:1.6;">${s.quarters[q]}</p></div>`).join('');
+        document.getElementById('sect-swot').innerHTML = s.swot.pros.map(p => `<span class="tag tag-pro">${p}</span>`).join('') + s.swot.cons.map(c => `<span class="tag tag-con">${c}</span>`).join('');
+        document.getElementById('execBody').innerHTML = s.execs.map(e => `<tr><td style="color:var(--accent-gold); padding:10px 0;">${e.t}</td><td style="font-weight:700;">${e.n}</td><td style="color:#666;">${e.d}</td></tr>`).join('');
+        document.getElementById('sect-potential').innerHTML = `<div style="font-size:0.9rem; color:#bbb; line-height:2;">${s.potential.join('<br>')}</div>`;
+
+        // Render News with Sentiment Labels (NEW)
+        document.getElementById('newsFeed').innerHTML = s.news.map(n => `
+            <a href="${n.url}" target="_blank" class="news-card">
+                <div style="margin-bottom:8px;">
+                    <span class="news-sentiment sentiment-${n.s}">${n.t}</span>
+                    <span style="font-size:0.65rem; color:#555;">03-23 <i class="fas fa-external-link-alt"></i></span>
+                </div>
+                <div style="font-weight:700; color:#fff; line-height:1.4;">${n.title}</div>
+            </a>
+        `).join('');
+        renderTV(s.symbol);
+    }
+
+    function renderTV(symbol) {
+        new TradingView.widget({
+            "autosize": true, "symbol": symbol, "interval": "D", "theme": "dark", "style": "1", "locale": "zh_TW",
+            "container_id": "tradingview_chart", "upColor": "#ff4d4d", "downColor": "#2ecc71"
+        });
+    }
+
+    const GAINERS = [ { s: "NVDL", c: "+12.2%" }, { s: "SOXL", c: "+10.4%" }, { s: "ZIM", c: "+9.22%" }, { s: "MSTR", c: "+6.8%" }, { s: "ARM", c: "+6.1%" }, { s: "PLTR", c: "+6.0%" }, { s: "TSLA", c: "+2.45%" }, { s: "BABA", c: "+2.1%" }, { s: "AMD", c: "+1.8%" }, { s: "NVDA", c: "+1.2%" } ];
+    const LOSERS = [ { s: "LULU", c: "-15.4%" }, { s: "NKE", c: "-8.5%" }, { s: "AAPL", c: "-4.2%" }, { s: "TSM", c: "-3.1%" }, { s: "GOOG", c: "-3.1%" }, { s: "FDX", c: "-2.5%" }, { s: "PFE", c: "-2.1%" }, { s: "PYPL", c: "-1.8%" }, { s: "DIS", c: "-1.5%" }, { s: "AMZN", c: "-1.2%" } ];
+
+    function renderMarket() {
+        document.getElementById('gainerBody').innerHTML = GAINERS.map(g => `<tr style="border-bottom:1px solid #111;"><td style="padding:15px; font-weight:700; color:#fff;">${g.s}</td><td style="text-align:right; color:var(--bullish); font-weight:700;">${g.c}</td></tr>`).join('');
+        document.getElementById('loserBody').innerHTML = LOSERS.map(l => `<tr style="border-bottom:1px solid #111;"><td style="padding:15px; font-weight:700; color:#fff;">${l.s}</td><td style="text-align:right; color:var(--bearish); font-weight:700;">${l.c}</td></tr>`).join('');
+    }
+
+    function copyText(t) { navigator.clipboard.writeText(t); alert('戰研指令已複製到剪貼板！'); }
+
+    window.onload = init;
+</script>
+</body>
+</html>
