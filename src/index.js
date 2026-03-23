@@ -4,7 +4,10 @@ const path = require('path');
 const config = require('../config/config');
 const { getDashboardData, insertArticle } = require('./db/database');
 const { analyzePending } = require('./analyzer/llm');
-const { triggerAlert } = require('./notifier/line');
+const { setupBotCommands } = require('./notifier/telegram');
+
+// 啟動 Telegram 互動指令
+setupBotCommands();
 
 const app = express();
 app.set('view engine', 'ejs');

@@ -3,7 +3,12 @@ require('dotenv').config();
 module.exports = {
   port: process.env.PORT || 3001,
   geminiApiKey: process.env.GEMINI_API_KEY,
-  lineNotifyToken: process.env.LINE_NOTIFY_TOKEN,
+  lineChannelAccessToken: process.env.LINE_CHANNEL_ACCESS_TOKEN,
+  lineUserId: process.env.LINE_USER_ID,
+  tavilyApiKey: process.env.TAVILY_API_KEY,
+  apifyToken: process.env.APIFY_TOKEN,
+  telegramBotToken: process.env.TELEGRAM_BOT_TOKEN,
+  telegramChatId: process.env.TELEGRAM_CHAT_ID,
   
   // 監控清單
   stocks: [

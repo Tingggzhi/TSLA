@@ -1,8 +1,9 @@
 const axios = require('axios');
 const config = require('../../config/config');
 const { insertAnalysis, insertAlert, getPendingArticles } = require('../db/database');
+const { triggerAllAlerts } = require('../notifier/notifier');
 
-const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
+const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent';
 
 /**
  * 建立分析 Prompt
@@ -93,11 +94,20 @@ async function analyzePending() {
 
       // 如果風險等級達到 Critical 或 High，觸發警報
       if (['Critical', 'High'].includes(analysis.riskLevel)) {
+        const alertPayload = {
+          symbol: article.symbol,
+          riskLevel: analysis.riskLevel,
+          summary: analysis.summary
+        };
+
         await insertAlert({
           symbol: article.symbol,
           risk_level: analysis.riskLevel,
           message: `🚫 [${analysis.riskLevel}] ${article.symbol}: ${analysis.summary}`
         });
+
+        // 送出即時通知 (LINE & Telegram)
+        await triggerAllAlerts(alertPayload);
       }
       console.log(`[LLM] 已分析 [${analysis.riskLevel}] ${article.symbol}`);
     }
