@@ -1,5 +1,6 @@
 const TelegramBot = require('node-telegram-bot-api');
 const config = require('../../config/config');
+const { getDashboardData } = require('../db/database');
 
 // 初始化 Bot
 let bot = null;
@@ -36,6 +37,39 @@ async function sendTelegramNotification(message, isRaw = false) {
   }
 }
 
+/**
+ * 初始化機器人指令 (與用戶互動)
+ */
+function setupBotCommands() {
+  if (!bot) return;
+
+  bot.on('message', async (msg) => {
+    const chatId = msg.chat.id;
+    const text = msg.text;
+    if (chatId.toString() !== config.telegramChatId.toString()) return;
+
+    if (text && text.includes('今天') && text.includes('消息')) {
+      await bot.sendMessage(chatId, '🔍 探索中...');
+      try {
+        const data = await getDashboardData();
+        if (data.length === 0) {
+          await bot.sendMessage(chatId, '📭 目前尚無數據。');
+          return;
+        }
+        let report = `*📊 今日戰略導航*\n══════════════════\n`;
+        data.forEach(item => {
+           report += `• *${item.symbol}*: ${item.risk_level}\n> ${item.summary}\n\n`;
+        });
+        const publicUrl = process.env.PUBLIC_URL || 'https://tingggzhi.github.io/TSLA/';
+        report += `══════════════════\n🔗 [查看完整旗艦面板](${publicUrl.replace(/_/g, '\\_')})`;
+        await bot.sendMessage(chatId, report, { parse_mode: 'Markdown' });
+      } catch (err) {
+        await bot.sendMessage(chatId, '❌ 失敗: ' + err.message);
+      }
+    }
+  });
+}
+
 async function triggerTelegramAlert(alertData) {
   const stock = config.stocks.find(s => s.symbol === alertData.symbol) || { symbol: alertData.symbol, name: alertData.symbol };
   const message = formatTelegramMessage({
@@ -47,4 +81,4 @@ async function triggerTelegramAlert(alertData) {
   await sendTelegramNotification(message);
 }
 
-module.exports = { triggerTelegramAlert, sendTelegramNotification, formatTelegramMessage };
+module.exports = { triggerTelegramAlert, sendTelegramNotification, formatTelegramMessage, setupBotCommands };

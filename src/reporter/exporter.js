@@ -36,11 +36,15 @@ async function runAutoBackup() {
     const templatePath = path.join(__dirname, 'views/dashboard.ejs');
     const templateStr = fs.readFileSync(templatePath, 'utf8');
     const staticHtmlContent = ejs.render(templateStr, { stocks });
+
+    // 將 HTML 代碼塊也寫入 Markdown 報告中
+    mdContent += `\n\n## 🌐 經典旗艦戰情室 HTML 原始碼 (v11.1 Sync)\n\n<details><summary>點擊查看完整的 HTML 代碼</summary>\n\n\`\`\`html\n${staticHtmlContent}\n\`\`\`\n\n</details>\n`;
     
     // 寫入根目錄的 index.html
     const rootPath = path.join(__dirname, '../../');
-    fs.writeFileSync(path.join(rootPath, 'index.html'), staticHtmlContent);
-    console.log('[GitHub Pages] 已生成動態快照: index.html');
+    const indexFile = path.join(rootPath, 'index.html');
+    fs.writeFileSync(indexFile, staticHtmlContent, { encoding: 'utf8', flag: 'w' });
+    console.log(`[GitHub Pages] 已成功生成並覆蓋 index.html (路徑: ${indexFile}, 大小: ${staticHtmlContent.length} bytes)`);
 
     // 3. 備份到本地專案 backups/
     const localBackupDir = path.join(__dirname, '../../backups');

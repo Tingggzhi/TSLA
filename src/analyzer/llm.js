@@ -6,28 +6,42 @@ const { triggerAllAlerts } = require('../notifier/notifier');
 const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent';
 
 /**
- * 建立分析 Prompt
+ * 建立豪華版分析 Prompt
  */
 function buildStockPrompt(article, stock) {
-  return `你是一位頂尖美股對沖基金空頭經理兼地緣政治策略家。對「${stock.name} (${stock.symbol})」的新聞進行分析。
-  
-  ===== 待分析內容 =====
-  來源：${article.source}
+  return `你是一位頂尖美股對沖基金空頭經理兼地緣政治策略家。你擅長從新聞碎片中拼湊出宏觀風險與成長奇點。
+  對「${stock.name} (${stock.symbol})」進行深度分析。
+
+  ===== 待分析新聞 =====
   標題：${article.title}
-  內容主旨：${(article.content || '').slice(0, 1500)}
-  
-  ===== 深度分析要求 =====
-  1. **核心洞察**：剝離表面利多，指出這篇新聞背後可能隱藏的財務陷阱或機構倒貨跡象。
-  2. **戰場局勢**：結合當前宏觀背景（利率、地緣衝突），判定該股未來 3 個月最脆弱的環節。
-  3. **風險分析**：Fear (0~-5) 或 Greed (0~+5)。
-  4. **毒舌摘要**：請用不超過 40 字的嘲諷、尖銳、但具備極高執行參考價值的內容進行總結。
-  
-  請回應 JSON 格式：
+  內容：${(article.content || '').slice(0, 1500)}
+
+  ===== 旗艦報表格式要求 (JSON 格式) =====
+  請務必回傳以下 JSON 結構：
   {
     "sentimentScore": -5到5,
     "riskLevel": "Low|Medium|High|Critical",
     "isManipulated": true/false,
-    "summary": "嘲諷且精準的總結內容"
+    "summary": "嘲諷且精準的 40 字總結",
+    "details": {
+      "expertView": "對當前情況的 100 字尖銳點評",
+      "advice": {
+        "alloc": "建議配置百分比 (例如 10%-12%)",
+        "logic": "核心配置邏輯",
+        "why": ["原因1", "原因2"],
+        "prompts": ["測試指令1", "測試指令2"]
+      },
+      "risk": {
+        "ratio": "一週內現金流量比判斷 (如 1.5x)",
+        "flow": "現金流與營運動能分析",
+        "resc": "一年內抗風險與資產韌性判讀"
+      },
+      "swot": {
+        "pros": ["優勢標籤1", "優勢標籤2"],
+        "cons": ["劣勢標籤1", "劣勢標籤2"]
+      },
+      "potential": ["未來三年成長爆發點1", "重點2"]
+    }
   }`;
 }
 
@@ -55,43 +69,34 @@ async function analyzeWithGemini(article, retryCount = 0) {
     return JSON.parse(cleanJson);
   } catch (err) {
     if (err.response && err.response.status === 429 && retryCount < 2) {
-      console.warn(`[LLM] 觸發頻率限制 (429)，等待 60 秒後進行第 ${retryCount + 1} 次重試...`);
+      console.warn(`[LLM] 頻率限制，等待 60 秒重試...`);
       await new Promise(r => setTimeout(r, 60000));
       return analyzeWithGemini(article, retryCount + 1);
     }
-    console.error(`[LLM] Gemini 分析 (${article.symbol}) 失敗: ${err.message}`);
+    console.error(`[LLM] 分析失敗: ${err.message}`);
     return null;
   }
 }
 
 /**
- * 批次處理待分析文章
+ * 批次處理文章
  */
 async function analyzePending() {
-  console.log('[LLM] 準備處理待分析文章...');
   const pending = await getPendingArticles();
-  
-  if (pending.length === 0) {
-    console.log('[LLM] 尚無待處理內容');
-    return;
-  }
+  if (pending.length === 0) return;
 
-  console.log(`[LLM] 發現 ${pending.length} 篇新內容，開始分析...`);
-  
   for (const article of pending) {
     const analysis = await analyzeWithGemini(article);
-    
     if (analysis) {
-      // 寫入分析結果 (符合 database.js 的 insertAnalysis 結構)
       await insertAnalysis({
         article_id: article.id,
         sentiment_score: analysis.sentimentScore,
         risk_level: analysis.riskLevel,
         is_manipulated: analysis.isManipulated,
-        summary: analysis.summary
+        summary: analysis.summary,
+        details: JSON.stringify(analysis.details) // 存入 JSON 詳情
       });
       
-      // 若風險等級達 Critical/High 則觸發即時警報
       if (['Critical', 'High'].includes(analysis.riskLevel)) {
         await triggerAllAlerts({
           symbol: article.symbol,
@@ -99,12 +104,9 @@ async function analyzePending() {
           summary: analysis.summary
         });
       }
-      
-      // 成功後延遲 5 秒，減緩 API 壓力
-      await new Promise(r => setTimeout(r, 5000));
+      await new Promise(r => setTimeout(r, 3000));
     }
   }
-  console.log('[LLM] 批次分析完成');
 }
 
 module.exports = { analyzePending };
